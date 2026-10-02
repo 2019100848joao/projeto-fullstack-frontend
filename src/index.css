@@ -1,0 +1,60 @@
+:root {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #252a32;
+  background: #fafbfc;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: 0;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 280px; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: wait; opacity: .7; }
+button:focus-visible { outline: 3px solid #3484d7; outline-offset: 3px; }
+.login-page { min-height: 100svh; display: flex; flex-direction: column; }
+.login-header {
+  display: flex; align-items: center; gap: 10px; padding: 24px 32px;
+  background: #fff; border-bottom: 1px solid #e5e8ed; color: #196d5b;
+  font-size: 22px; font-weight: 700;
+}
+.login-main { flex: 1; display: grid; place-items: center; padding: 48px 24px; }
+.login-form-container { width: 100%; max-width: 380px; }
+h1 { font-size: 28px; line-height: 1.25; margin: 0 0 10px; overflow-wrap: anywhere; }
+.login-subtitle { margin: 0 0 32px; color: #626c79; font-size: 15px; line-height: 1.6; }
+.field { margin-bottom: 22px; }
+label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; }
+input {
+  display: block; width: 100%; min-width: 0; height: 48px; padding: 0 14px;
+  border: 1px solid #bfc8d2; border-radius: 6px; color: #252a32; background: #fff;
+}
+input::placeholder { color: #79818d; }
+input:focus { outline: 2px solid #3484d7; outline-offset: 2px; }
+.password-field { position: relative; }
+.password-field input { padding-right: 50px; }
+.password-toggle {
+  position: absolute; right: 4px; top: 4px; width: 40px; height: 40px;
+  border: 0; border-radius: 4px; display: grid; place-items: center;
+  background: transparent; color: #626c79;
+}
+.password-toggle:hover { color: #252a32; background: #f0f3f6; }
+.primary-button {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 48px; width: 100%; border: 1px solid transparent; border-radius: 6px;
+  padding: 12px 16px; background: #196d5b; color: #fff; font-weight: 600;
+}
+.primary-button:hover:not(:disabled) { background: #125342; }
+.form-error {
+  font-size: 14px; line-height: 1.5; color: #a62736;
+  background: #fff0f1; border-left: 3px solid #bb3545; padding: 12px; margin: 0 0 20px;
+}
+.login-footer { text-align: center; padding: 24px; color: #717a86; font-size: 13px; }
+.spinner { animation: spin 1s linear infinite; }
+.signed-in { max-width: 480px; margin: 80px auto; padding: 24px; }
+.brand-icon { color: #196d5b; margin-bottom: 24px; }
+.signed-in p { overflow-wrap: anywhere; color: #626c79; }
+.role { display: block; text-transform: capitalize; margin: 24px 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+@media (max-width: 480px) { .login-header { padding: 20px 24px; } }
