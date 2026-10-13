@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { ArrowRight, Eye, EyeOff, HeartPulse, LoaderCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 
-export default function Login() {
+export default function Login({ onCancel }) {
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,6 +29,7 @@ export default function Login() {
       <header className="login-header">
         <HeartPulse size={26} aria-hidden="true" />
         <span>Clinic</span>
+        {onCancel && <button type="button" className="login-back-button" onClick={onCancel}>Voltar para a Home</button>}
       </header>
       <main className="login-main">
         <div className="login-form-container">
@@ -68,3 +69,9 @@ export default function Login() {
     </div>
   );
 }
+
+
+
+
+
+
