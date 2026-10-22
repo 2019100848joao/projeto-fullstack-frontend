@@ -1,4 +1,4 @@
-function Hero() {
+function Hero({ onLogin }) {
   return (
     <section className="hero-section" id="inicio">
       <div className="hero-content">
@@ -15,9 +15,9 @@ function Hero() {
         </p>
 
         <div className="hero-actions">
-          <a href="#" className="primary-button">
+          <button type="button" onClick={onLogin} className="primary-button">
             Acessar plataforma
-          </a>
+          </button>
 
           <a href="#servicos" className="secondary-button">
             Conheça os serviços

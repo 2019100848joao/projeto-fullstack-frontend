@@ -28,44 +28,44 @@ export default function Login({ onCancel }) {
     <div className="login-page">
       <header className="login-header">
         <HeartPulse size={26} aria-hidden="true" />
-        <span>Clinic</span>
-        {onCancel && <button type="button" className="login-back-button" onClick={onCancel}>Voltar para a Home</button>}
+        <span>Clínica Saúde</span>
+        {onCancel && <button type="button" className="login-back-button" onClick={onCancel}>Voltar ao início</button>}
       </header>
       <main className="login-main">
         <div className="login-form-container">
-          <h1>Welcome back</h1>
-          <p className="login-subtitle">Sign in to your clinic account.</p>
+          <h1>Boas-vindas de volta</h1>
+          <p className="login-subtitle">Entre na sua conta da clínica.</p>
           <form onSubmit={handleSubmit} aria-busy={pending}>
             <div className="field">
-              <label htmlFor="email">Email address</label>
+              <label htmlFor="email">E-mail</label>
               <input id="email" name="email" type="email" autoComplete="username"
-                placeholder="you@example.com" required maxLength={254} disabled={pending}
+                placeholder="seu@email.com" required maxLength={254} disabled={pending}
                 value={email} onChange={(event) => { setEmail(event.target.value); setError(''); }} />
             </div>
             <div className="field">
-              <label htmlFor="password">Password</label>
+              <label htmlFor="password">Senha</label>
               <div className="password-field">
                 <input id="password" name="password" type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password" placeholder="Enter your password" required
+                  autoComplete="current-password" placeholder="Digite sua senha" required
                   maxLength={128} disabled={pending} value={password}
                   onChange={(event) => { setPassword(event.target.value); setError(''); }} />
                 <button type="button" className="password-toggle" disabled={pending}
                   onClick={() => setShowPassword((value) => !value)} aria-controls="password"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  title={showPassword ? 'Hide password' : 'Show password'}>
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
             </div>
             {error && <p className="form-error" role="alert">{error}</p>}
             <button type="submit" className="primary-button" disabled={pending}>
-              {pending ? <><LoaderCircle size={18} className="spinner" aria-hidden="true" /> Signing in...</>
-                : <>Sign in <ArrowRight size={18} aria-hidden="true" /></>}
+              {pending ? <><LoaderCircle size={18} className="spinner" aria-hidden="true" /> Entrando...</>
+                : <>Entrar <ArrowRight size={18} aria-hidden="true" /></>}
             </button>
           </form>
         </div>
       </main>
-      <footer className="login-footer">Clinic Portal</footer>
+      <footer className="login-footer">Portal da Clínica Saúde</footer>
     </div>
   );
 }

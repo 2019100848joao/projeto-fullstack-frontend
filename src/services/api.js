@@ -8,17 +8,17 @@ async function request(path, options = {}) {
     const response = await fetch(`${API_URL}${path}`, { ...options, signal: controller.signal });
     if (!response.ok) {
       const messages = {
-        401: 'Invalid email or password. Please try again.',
-        403: 'Your account is inactive. Contact the clinic.',
-        422: 'Please check your email and password.',
-        429: 'Too many attempts. Please try again later.',
+        401: 'E-mail ou senha inválidos. Tente novamente.',
+        403: 'Sua conta está inativa. Entre em contato com a clínica.',
+        422: 'Confira seu e-mail e sua senha.',
+        429: 'Muitas tentativas. Tente novamente mais tarde.',
       };
-      throw new Error(messages[response.status] || 'Unable to sign in. Please try again later.');
+      throw new Error(messages[response.status] || 'Não foi possível entrar. Tente novamente mais tarde.');
     }
     return await response.json();
   } catch (error) {
-    if (error.name === 'AbortError') throw new Error('The request timed out. Please try again.');
-    if (error instanceof TypeError) throw new Error('Unable to reach the clinic. Please try again later.');
+    if (error.name === 'AbortError') throw new Error('A solicitação demorou demais. Tente novamente.');
+    if (error instanceof TypeError) throw new Error('Não foi possível conectar à clínica. Tente novamente mais tarde.');
     throw error;
   } finally {
     clearTimeout(timeout);
