@@ -1,0 +1,75 @@
+.patient-welcome-card {
+  margin-bottom: 22px;
+}
+
+.patient-welcome-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: #d7f1ef;
+  color: #1d9a9b;
+}
+
+.patient-services {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 22px;
+}
+
+.patient-service-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 220px;
+  padding: 28px;
+  border: 1px solid #e1ebed;
+  border-radius: 18px;
+  background: #fff;
+  color: #61717a;
+  text-align: left;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.patient-service-card:hover {
+  border-color: #1d9a9b;
+  box-shadow: 0 12px 30px rgba(18, 59, 74, .08);
+}
+
+.patient-service-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+  background: #eaf8f7;
+  color: #1d9a9b;
+}
+
+.patient-service-card strong {
+  margin-bottom: 8px;
+  color: #123b4a;
+  font-size: 20px;
+}
+
+.patient-service-card > span:not(.patient-service-icon):not(.patient-service-link) {
+  line-height: 1.5;
+}
+
+.patient-service-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 20px;
+  color: #126f72;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+@media (max-width: 420px) {
+  .patient-welcome-icon { display: none; }
+}

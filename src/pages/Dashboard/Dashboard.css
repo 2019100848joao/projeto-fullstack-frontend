@@ -156,7 +156,6 @@
   font-weight: 600;
 }
 
-.dashboard-topbar-role { color: #126f72; }
 .dashboard-content { width: min(100%, 1040px); margin: 0 auto; padding: 48px 40px 80px; }
 .dashboard-page-heading { margin-bottom: 30px; }
 .dashboard-page-heading h1 { margin: 12px 0 8px; color: #123b4a; font-size: clamp(28px, 3vw, 36px); }

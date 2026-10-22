@@ -13,7 +13,9 @@ async function request(path, options = {}) {
         422: 'Confira seu e-mail e sua senha.',
         429: 'Muitas tentativas. Tente novamente mais tarde.',
       };
-      throw new Error(messages[response.status] || 'Não foi possível entrar. Tente novamente mais tarde.');
+      const error = new Error(messages[response.status] || 'Não foi possível entrar. Tente novamente mais tarde.');
+      error.status = response.status;
+      throw error;
     }
     return await response.json();
   } catch (error) {

@@ -1,5 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { CalendarDays, ChevronRight, HeartPulse, Home, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { CalendarDays, ChevronRight, FileText, HeartPulse, Home, LogOut, PanelLeftClose, PanelLeftOpen, Users } from 'lucide-react';
+import Patient from '../Patient/Patient.jsx';
+import DoctorPatients from '../DoctorPatients/DoctorPatients.jsx';
 import './Dashboard.css';
 
 const roleNames = {
@@ -7,6 +9,13 @@ const roleNames = {
   attendant: 'Atendimento',
   doctor: 'Médico',
   patient: 'Paciente',
+};
+
+const areaNames = {
+  admin: 'Área da administração',
+  attendant: 'Área do atendimento',
+  doctor: 'Área do médico',
+  patient: 'Área do paciente',
 };
 
 function Dashboard({ user, onLogout }) {
@@ -17,9 +26,12 @@ function Dashboard({ user, onLogout }) {
   const previousWidth = useRef(null);
   const collapsed = manualCollapsed ?? compactLayout;
   const isDoctor = user.role === 'doctor';
+  const isPatient = user.role === 'patient';
   const navigation = [
     { id: 'home', label: 'Início', icon: Home },
-    ...(isDoctor ? [{ id: 'appointments', label: 'Consultas', icon: CalendarDays }] : []),
+    ...((isDoctor || isPatient) ? [{ id: 'appointments', label: 'Consultas', icon: CalendarDays }] : []),
+    ...(isDoctor ? [{ id: 'patients', label: 'Pacientes', icon: Users }] : []),
+    ...(isPatient ? [{ id: 'exams', label: 'Exames', icon: FileText }] : []),
   ];
 
   useLayoutEffect(() => {
@@ -102,11 +114,14 @@ function Dashboard({ user, onLogout }) {
 
       <main className="dashboard-main">
         <div className="dashboard-topbar">
-          <span>Área do usuário</span>
-          <span className="dashboard-topbar-role">{roleNames[user.role] || 'Usuário'}</span>
+          <span>{areaNames[user.role] || 'Área do usuário'}</span>
         </div>
 
-        {section === 'appointments' && isDoctor ? (
+        {isPatient ? (
+          <Patient user={user} section={section} onNavigate={navigateTo} />
+        ) : section === 'patients' && isDoctor ? (
+          <DoctorPatients />
+        ) : section === 'appointments' && isDoctor ? (
           <section className="dashboard-content" aria-labelledby="dashboard-title">
             <div className="dashboard-page-heading">
               <span className="dashboard-eyebrow">ATENDIMENTOS</span>
