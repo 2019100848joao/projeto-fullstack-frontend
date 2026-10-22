@@ -99,6 +99,21 @@ input:focus { outline: 2px solid #3484d7; outline-offset: 2px; }
   color: #fff;
 }
 
+.session-status {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  min-height: 100svh;
+  padding: 24px;
+  text-align: center;
+}
+
+.session-status p { margin: 0; color: #61717a; }
+.session-status-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 12px; }
+.session-status-actions button { padding: 10px 16px; border: 1px solid #196d5b; border-radius: 8px; background: #fff; color: #196d5b; font-weight: 600; }
+.session-status-actions button:first-child { background: #196d5b; color: #fff; }
+
 @media (max-width: 360px) {
   .login-header {
     gap: 8px;
