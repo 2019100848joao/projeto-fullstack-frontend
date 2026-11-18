@@ -1,7 +1,7 @@
-﻿import Navbar from '../components/Navbar'
-import Hero from '../components/Hero'
-import FeatureCard from '../components/FeatureCard'
-import Footer from '../components/Footer'
+﻿import Navbar from '../../components/Navbar'
+import Hero from '../../components/Hero'
+import FeatureCard from '../../components/FeatureCard'
+import Footer from '../../components/Footer'
 
 function Home({ onLogin }) {
   return (
@@ -9,7 +9,7 @@ function Home({ onLogin }) {
       <Navbar onLogin={onLogin} />
 
       <main>
-        <Hero />
+        <Hero onLogin={onLogin} />
 
         <section className="features-section" id="servicos">
           <div className="section-heading">
