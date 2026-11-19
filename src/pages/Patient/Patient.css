@@ -30,12 +30,11 @@
   background: #fff;
   color: #61717a;
   text-align: left;
-  transition: border-color .2s ease, box-shadow .2s ease;
+  transition: border-color .2s ease;
 }
 
 .patient-service-card:hover {
   border-color: #1d9a9b;
-  box-shadow: 0 12px 30px rgba(18, 59, 74, .08);
 }
 
 .patient-service-icon {

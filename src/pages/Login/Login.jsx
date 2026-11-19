@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { ArrowRight, Eye, EyeOff, HeartPulse, LoaderCircle } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext.jsx';
+import { useAuth } from '../../contexts/auth.js';
 
-export default function Login({ onCancel, onSuccess }) {
+export default function Login({ onCancel, onSuccess, onRegister }) {
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,6 +64,12 @@ export default function Login({ onCancel, onSuccess }) {
                 : <>Entrar <ArrowRight size={18} aria-hidden="true" /></>}
             </button>
           </form>
+          {onRegister && (
+            <div className="auth-switch">
+              <span>Ainda não tem conta?</span>
+              <button type="button" className="auth-switch-link" onClick={onRegister} disabled={pending}>Criar conta de paciente</button>
+            </div>
+          )}
         </div>
       </main>
       <footer className="login-footer">Portal da Clínica Saúde</footer>

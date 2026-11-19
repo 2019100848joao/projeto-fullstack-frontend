@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { AuthProvider, useAuth } from "./contexts/AuthContext.jsx";
+import { AuthProvider } from "./contexts/AuthContext.jsx";
+import { useAuth } from "./contexts/auth.js";
+import { register } from "./services/api.js";
 import Login from "./pages/Login/Login.jsx";
 import SignUp from "./pages/SignUp.jsx";
 import Home from "./pages/Home/Home.jsx";
@@ -7,7 +9,6 @@ import Dashboard from "./pages/Dashboard/Dashboard.jsx";
 import SuccessToast from "./components/SuccessToast.jsx";
 
 const DOCUMENT_TYPES = ["CPF", "RG"];
-const apiBase = () => (import.meta.env.VITE_API_URL || "/api").replace(/\/$/, "");
 
 function Reminder({ open, missingTypes, onDismiss, onSuccess }) {
   const { registerDocument } = useAuth();
@@ -261,6 +262,7 @@ function AppContent() {
       <Login
         onCancel={() => setScreen("home")}
         onSuccess={() => setScreen("home")}
+        onRegister={() => setScreen("signup")}
       />
     );
   } else if (screen === "signup") {
@@ -268,30 +270,7 @@ function AppContent() {
       <SignUp
         onCancel={() => setScreen("home")}
         onSubmit={async (data) => {
-          let response;
-          try {
-            response = await fetch(`${apiBase()}/auth/register`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                full_name: data.full_name,
-                email: data.email,
-                password: data.password,
-              }),
-            });
-          } catch {
-            throw new Error("Não foi possível conectar à clínica. Tente novamente.");
-          }
-
-          if (response.status === 409) {
-            throw new Error("Este e-mail já está cadastrado. Entre na sua conta ou use outro e-mail.");
-          }
-          if (response.status === 422) {
-            throw new Error("Confira nome, e-mail e senha. A API rejeitou os dados informados.");
-          }
-          if (response.status !== 201) {
-            throw new Error("Não foi possível criar a conta. Tente novamente mais tarde.");
-          }
+          await register({ fullName: data.full_name, email: data.email, password: data.password });
           setScreen("login");
         }}
       />

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext.jsx';
+import { useAuth } from '../../contexts/auth.js';
 import SuccessToast from '../../components/SuccessToast.jsx';
 
 const roleNames = {
