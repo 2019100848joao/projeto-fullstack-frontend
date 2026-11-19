@@ -1,7 +1,7 @@
 IMAGE ?= clinic-frontend
 PORT ?= 8080
 
-.PHONY: install run dev build preview docker-build docker-run
+.PHONY: install run dev build preview test lint check docker-build docker-run
 
 install:
 	npm ci
@@ -16,6 +16,14 @@ build:
 
 preview:
 	npm run preview
+
+test:
+	npm test
+
+lint:
+	npm run lint
+
+check: lint test build
 
 docker-build:
 	docker build -t $(IMAGE) .

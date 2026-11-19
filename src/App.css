@@ -99,6 +99,7 @@
 .login-button {
   padding: 11px 22px;
 
+  border: 0;
   border-radius: 9px;
 
   background: var(--primary);
@@ -107,14 +108,11 @@
   font-size: 15px;
   font-weight: 600;
 
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .login-button:hover {
   background: var(--primary-light);
-  transform: translateY(-1px);
 }
 
 
@@ -199,24 +197,17 @@
   font-size: 15px;
   font-weight: 600;
 
-  transition:
-    transform 0.2s ease,
-    background 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .primary-button {
+  border: 1px solid transparent;
   background: var(--primary);
   color: var(--white);
 }
 
 .primary-button:hover {
   background: var(--primary-light);
-
-  transform: translateY(-2px);
-
-  box-shadow:
-    0 8px 18px rgba(29, 154, 155, 0.20);
 }
 
 .secondary-button {
@@ -227,7 +218,6 @@
 
 .secondary-button:hover {
   background: var(--primary-soft);
-  transform: translateY(-2px);
 }
 
 

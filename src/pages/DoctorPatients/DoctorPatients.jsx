@@ -1,9 +1,18 @@
+import { useCallback } from 'react';
 import { Users } from 'lucide-react';
+import { useAuth } from '../../contexts/auth.js';
+import { useAsync } from '../../hooks/useAsync.js';
+import { DataView } from '../../components/clinic/ui.jsx';
 import './DoctorPatients.css';
 
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium' });
 
-function DoctorPatients({ patients = [] }) {
+function DoctorPatients() {
+  const { api } = useAuth();
+  const loadPatients = useCallback(() => api.listAttendedPatients(), [api]);
+  const patients = useAsync(loadPatients);
+  const count = patients.data?.length ?? 0;
+
   return (
     <section className="dashboard-content" aria-labelledby="dashboard-title">
       <div className="dashboard-page-heading">
@@ -13,16 +22,15 @@ function DoctorPatients({ patients = [] }) {
       </div>
 
       <div className="doctor-patients-list">
-        <p className="doctor-patients-count">Pacientes atendidos{patients.length > 0 && ` · ${patients.length}`}</p>
-        {patients.length === 0 ? (
-          <div className="dashboard-empty-state">
-            <span className="dashboard-empty-icon"><Users size={30} aria-hidden="true" /></span>
-            <h2>Listagem de pacientes indisponível</h2>
-            <p>Seus pacientes atendidos aparecerão aqui em breve.</p>
-          </div>
-        ) : (
+        <p className="doctor-patients-count">Pacientes atendidos{count > 0 && ` · ${count}`}</p>
+        <DataView
+          {...patients}
+          onRetry={patients.reload}
+          isEmpty={count === 0}
+          empty={{ icon: Users, title: 'Nenhum paciente atendido ainda', text: 'Os pacientes aparecem aqui depois que você registra o atendimento na agenda.' }}
+        >
           <ul>
-            {patients.map((patient) => (
+            {patients.data?.map((patient) => (
               <li key={patient.id} className="doctor-patient-row">
                 <span className="dashboard-avatar" aria-hidden="true">{patient.full_name.charAt(0).toUpperCase()}</span>
                 <div className="doctor-patient-identity">
@@ -36,7 +44,7 @@ function DoctorPatients({ patients = [] }) {
               </li>
             ))}
           </ul>
-        )}
+        </DataView>
       </div>
     </section>
   );

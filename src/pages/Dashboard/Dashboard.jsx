@@ -1,7 +1,11 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { CalendarDays, ChevronRight, FileText, HeartPulse, Home, LogOut, PanelLeftClose, PanelLeftOpen, Users } from 'lucide-react';
+import { CalendarClock, CalendarDays, ChevronRight, FileText, HeartPulse, Home, LogOut, PanelLeftClose, PanelLeftOpen, Users } from 'lucide-react';
 import Patient from '../Patient/Patient.jsx';
 import DoctorPatients from '../DoctorPatients/DoctorPatients.jsx';
+import Appointments from '../Appointments/Appointments.jsx';
+import Calendar from '../Calendar/Calendar.jsx';
+import Exams from '../Exams/Exams.jsx';
+import PatientAppointments from '../PatientAppointments/PatientAppointments.jsx';
 import './Dashboard.css';
 
 const roleNames = {
@@ -9,6 +13,16 @@ const roleNames = {
   attendant: 'Atendimento',
   doctor: 'Médico',
   patient: 'Paciente',
+};
+
+const home = { id: 'home', label: 'Início', icon: Home };
+const exams = { id: 'exams', label: 'Exames', icon: FileText };
+
+const navigationByRole = {
+  admin: [home, { id: 'appointments', label: 'Agendamentos', icon: CalendarDays }, { id: 'calendar', label: 'Agenda médica', icon: CalendarClock }, exams],
+  attendant: [home, { id: 'appointments', label: 'Agendamentos', icon: CalendarDays }, exams],
+  doctor: [home, { id: 'calendar', label: 'Agenda', icon: CalendarDays }, { id: 'patients', label: 'Pacientes', icon: Users }, exams],
+  patient: [home, { id: 'appointments', label: 'Consultas', icon: CalendarDays }, exams],
 };
 
 const areaNames = {
@@ -27,12 +41,8 @@ function Dashboard({ user, onLogout }) {
   const collapsed = manualCollapsed ?? compactLayout;
   const isDoctor = user.role === 'doctor';
   const isPatient = user.role === 'patient';
-  const navigation = [
-    { id: 'home', label: 'Início', icon: Home },
-    ...((isDoctor || isPatient) ? [{ id: 'appointments', label: 'Consultas', icon: CalendarDays }] : []),
-    ...(isDoctor ? [{ id: 'patients', label: 'Pacientes', icon: Users }] : []),
-    ...(isPatient ? [{ id: 'exams', label: 'Exames', icon: FileText }] : []),
-  ];
+  const navigation = navigationByRole[user.role] ?? [home];
+  const activeSection = navigation.some((item) => item.id === section) ? section : 'home';
 
   useLayoutEffect(() => {
     const dashboard = dashboardRef.current;
@@ -85,9 +95,9 @@ function Dashboard({ user, onLogout }) {
               <button
                 key={id}
                 type="button"
-                className={`dashboard-nav-item${section === id ? ' is-active' : ''}`}
+                className={`dashboard-nav-item${activeSection === id ? ' is-active' : ''}`}
                 aria-label={label}
-                aria-current={section === id ? 'page' : undefined}
+                aria-current={activeSection === id ? 'page' : undefined}
                 title={collapsed ? label : undefined}
                 onClick={() => navigateTo(id)}
               >
@@ -117,23 +127,16 @@ function Dashboard({ user, onLogout }) {
           <span>{areaNames[user.role] || 'Área do usuário'}</span>
         </div>
 
-        {isPatient ? (
-          <Patient user={user} section={section} onNavigate={navigateTo} />
-        ) : section === 'patients' && isDoctor ? (
+        {activeSection === 'exams' ? (
+          <Exams user={user} />
+        ) : activeSection === 'calendar' ? (
+          <Calendar user={user} />
+        ) : activeSection === 'appointments' ? (
+          isPatient ? <PatientAppointments /> : <Appointments />
+        ) : activeSection === 'patients' ? (
           <DoctorPatients />
-        ) : section === 'appointments' && isDoctor ? (
-          <section className="dashboard-content" aria-labelledby="dashboard-title">
-            <div className="dashboard-page-heading">
-              <span className="dashboard-eyebrow">ATENDIMENTOS</span>
-              <h1 id="dashboard-title">Consultas</h1>
-              <p>Consulte seus atendimentos em um só lugar.</p>
-            </div>
-            <div className="dashboard-empty-state">
-              <span className="dashboard-empty-icon"><CalendarDays size={30} aria-hidden="true" /></span>
-              <h2>Visualização de consultas em preparação</h2>
-              <p>A listagem dos seus atendimentos estará disponível em breve.</p>
-            </div>
-          </section>
+        ) : isPatient ? (
+          <Patient user={user} onNavigate={navigateTo} />
         ) : (
           <section className="dashboard-content" aria-labelledby="dashboard-title">
             <div className="dashboard-page-heading">
@@ -147,12 +150,12 @@ function Dashboard({ user, onLogout }) {
                 <h2>{isDoctor ? 'Seu espaço de trabalho' : 'Tudo em um só lugar'}</h2>
                 <p>
                   {isDoctor
-                    ? 'Acesse a área de consultas pelo menu lateral.'
+                    ? 'Acesse sua agenda e registre os atendimentos pelo menu lateral.'
                     : 'Esta é a sua página inicial na plataforma.'}
                 </p>
                 {isDoctor && (
-                  <button type="button" className="dashboard-card-action" onClick={() => navigateTo('appointments')}>
-                    Ver consultas <ChevronRight size={18} aria-hidden="true" />
+                  <button type="button" className="dashboard-card-action" onClick={() => navigateTo('calendar')}>
+                    Ver agenda <ChevronRight size={18} aria-hidden="true" />
                   </button>
                 )}
               </div>

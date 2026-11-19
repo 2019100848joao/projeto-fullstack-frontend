@@ -1,16 +1,18 @@
 ﻿import { useState } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
+import { AuthProvider } from './contexts/AuthContext.jsx';
+import { useAuth } from './contexts/auth.js';
 import Login from './pages/Login/Login.jsx';
+import Register from './pages/Register/Register.jsx';
 import Home from './pages/Home/Home.jsx';
 import Dashboard from './pages/Dashboard/Dashboard.jsx';
 
 function AppContent() {
   const { user, logout, restoreStatus, retryRestore } = useAuth();
-  const [loginOpen, setLoginOpen] = useState(false);
+  const [screen, setScreen] = useState('home');
 
   function handleLogout() {
     logout();
-    setLoginOpen(false);
+    setScreen('home');
   }
 
   if (restoreStatus !== 'ready') {
@@ -36,11 +38,15 @@ function AppContent() {
     return <Dashboard user={user} onLogout={handleLogout} />;
   }
 
-  if (loginOpen) {
-    return <Login onCancel={() => setLoginOpen(false)} />;
+  if (screen === 'login') {
+    return <Login onCancel={() => setScreen('home')} onRegister={() => setScreen('register')} />;
   }
 
-  return <Home onLogin={() => setLoginOpen(true)} />;
+  if (screen === 'register') {
+    return <Register onCancel={() => setScreen('home')} onLogin={() => setScreen('login')} />;
+  }
+
+  return <Home onLogin={() => setScreen('login')} />;
 }
 
 export default function App() {
