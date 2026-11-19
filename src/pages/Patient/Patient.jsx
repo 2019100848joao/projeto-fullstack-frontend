@@ -1,46 +1,7 @@
 import { CalendarDays, ChevronRight, FileText } from 'lucide-react';
 import './Patient.css';
 
-const sections = {
-  appointments: {
-    eyebrow: 'ATENDIMENTOS',
-    title: 'Minhas consultas',
-    description: 'Acompanhe suas consultas na clínica.',
-    emptyTitle: 'Visualização de consultas em preparação',
-    emptyDescription: 'Suas consultas estarão disponíveis aqui em breve.',
-    icon: CalendarDays,
-  },
-  exams: {
-    eyebrow: 'RESULTADOS',
-    title: 'Meus exames',
-    description: 'Consulte seus exames e resultados.',
-    emptyTitle: 'Visualização de exames em preparação',
-    emptyDescription: 'Seus exames estarão disponíveis aqui em breve.',
-    icon: FileText,
-  },
-};
-
-function Patient({ user, section, onNavigate }) {
-  const activeSection = sections[section];
-
-  if (activeSection) {
-    const Icon = activeSection.icon;
-    return (
-      <section className="dashboard-content" aria-labelledby="dashboard-title">
-        <div className="dashboard-page-heading">
-          <span className="dashboard-eyebrow">{activeSection.eyebrow}</span>
-          <h1 id="dashboard-title">{activeSection.title}</h1>
-          <p>{activeSection.description}</p>
-        </div>
-        <div className="dashboard-empty-state">
-          <span className="dashboard-empty-icon"><Icon size={30} aria-hidden="true" /></span>
-          <h2>{activeSection.emptyTitle}</h2>
-          <p>{activeSection.emptyDescription}</p>
-        </div>
-      </section>
-    );
-  }
-
+function Patient({ user, onNavigate }) {
   return (
     <section className="dashboard-content" aria-labelledby="dashboard-title">
       <div className="dashboard-page-heading">

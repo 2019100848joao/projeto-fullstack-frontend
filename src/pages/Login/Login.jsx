@@ -1,8 +1,8 @@
-﻿import React, { useState } from 'react';
+﻿import { useState } from 'react';
 import { ArrowRight, Eye, EyeOff, HeartPulse, LoaderCircle } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext.jsx';
+import { useAuth } from '../../contexts/auth.js';
 
-export default function Login({ onCancel }) {
+export default function Login({ onCancel, onRegister }) {
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -58,11 +58,17 @@ export default function Login({ onCancel }) {
               </div>
             </div>
             {error && <p className="form-error" role="alert">{error}</p>}
-            <button type="submit" className="primary-button" disabled={pending}>
+            <button type="submit" className="auth-submit-button" disabled={pending}>
               {pending ? <><LoaderCircle size={18} className="spinner" aria-hidden="true" /> Entrando...</>
                 : <>Entrar <ArrowRight size={18} aria-hidden="true" /></>}
             </button>
           </form>
+          {onRegister && (
+            <div className="auth-switch">
+              <span>Ainda não tem conta?</span>
+              <button type="button" className="auth-switch-link" onClick={onRegister} disabled={pending}>Criar conta de paciente</button>
+            </div>
+          )}
         </div>
       </main>
       <footer className="login-footer">Portal da Clínica Saúde</footer>
