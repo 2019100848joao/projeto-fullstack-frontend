@@ -1,7 +1,8 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { CalendarDays, ChevronRight, FileText, HeartPulse, Home, LogOut, PanelLeftClose, PanelLeftOpen, Users } from 'lucide-react';
+import { CalendarDays, ChevronRight, FileText, HeartPulse, Home, LogOut, PanelLeftClose, PanelLeftOpen, UserRound, Users } from 'lucide-react';
 import Patient from '../Patient/Patient.jsx';
 import DoctorPatients from '../DoctorPatients/DoctorPatients.jsx';
+import Profile from '../Profile/Profile.jsx';
 import './Dashboard.css';
 
 const roleNames = {
@@ -18,8 +19,8 @@ const areaNames = {
   patient: 'Área do paciente',
 };
 
-function Dashboard({ user, onLogout }) {
-  const [section, setSection] = useState('home');
+function Dashboard({ user, initialSection = 'home', onLogout, onHome }) {
+  const [section, setSection] = useState(initialSection);
   const [compactLayout, setCompactLayout] = useState(false);
   const [manualCollapsed, setManualCollapsed] = useState(null);
   const dashboardRef = useRef(null);
@@ -29,6 +30,7 @@ function Dashboard({ user, onLogout }) {
   const isPatient = user.role === 'patient';
   const navigation = [
     { id: 'home', label: 'Início', icon: Home },
+    { id: 'profile', label: 'Meu perfil', icon: UserRound },
     ...((isDoctor || isPatient) ? [{ id: 'appointments', label: 'Consultas', icon: CalendarDays }] : []),
     ...(isDoctor ? [{ id: 'patients', label: 'Pacientes', icon: Users }] : []),
     ...(isPatient ? [{ id: 'exams', label: 'Exames', icon: FileText }] : []),
@@ -61,10 +63,18 @@ function Dashboard({ user, onLogout }) {
     <div ref={dashboardRef} className={`dashboard${compactLayout ? ' is-compact-layout' : ''}`}>
       <aside className={`dashboard-sidebar${collapsed ? ' is-collapsed' : ''}`} aria-label="Menu lateral">
         <div className="dashboard-sidebar-header">
-          <div className="dashboard-brand">
+          <a
+            href="#inicio"
+            className="dashboard-brand"
+            aria-label="Clínica Saúde — página inicial"
+            onClick={(event) => {
+              event.preventDefault();
+              onHome();
+            }}
+          >
             <span className="dashboard-brand-icon"><HeartPulse size={22} aria-hidden="true" /></span>
             <span className="dashboard-brand-name">Clínica Saúde</span>
-          </div>
+          </a>
           <button
             type="button"
             className="dashboard-sidebar-toggle"
@@ -117,7 +127,9 @@ function Dashboard({ user, onLogout }) {
           <span>{areaNames[user.role] || 'Área do usuário'}</span>
         </div>
 
-        {isPatient ? (
+        {section === 'profile' ? (
+          <Profile user={user} />
+        ) : isPatient ? (
           <Patient user={user} section={section} onNavigate={navigateTo} />
         ) : section === 'patients' && isDoctor ? (
           <DoctorPatients />

@@ -1,0 +1,104 @@
+
+/* Estilos específicos da tela de cadastro */
+
+.signup-container {
+  max-width: 520px;
+  width: 100%;
+}
+
+.signup-steps {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 24px;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.signup-names {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.signup-hint {
+  margin-top: 8px;
+  margin-bottom: 20px;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.signup-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 8px 0;
+  border: none;
+  background: transparent;
+  color: #0f766e;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.signup-back:hover {
+  color: #115e59;
+}
+
+.signup-skip {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.signup-skip:hover {
+  color: #0f766e;
+}
+
+.form-error {
+  margin: 12px 0;
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.password-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 44px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.password-toggle:hover {
+  color: #0f766e;
+}
+
+@media (max-width: 480px) {
+  .signup-names {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

@@ -3,10 +3,16 @@ import Hero from '../../components/Hero'
 import FeatureCard from '../../components/FeatureCard'
 import Footer from '../../components/Footer'
 
-function Home({ onLogin }) {
+function Home({ user, onLogin, onSignUp, onLogout, onNavigateToProfile }) {
   return (
     <>
-      <Navbar onLogin={onLogin} />
+      <Navbar
+        user={user}
+        onLogin={onLogin}
+        onSignUp={onSignUp}
+        onLogout={onLogout}
+        onNavigateToProfile={onNavigateToProfile}
+      />
 
       <main>
         <Hero onLogin={onLogin} />

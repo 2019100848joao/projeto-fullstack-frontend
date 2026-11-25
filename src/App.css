@@ -23,6 +23,8 @@
    ========================= */
 
 .navbar {
+  position: relative;
+  z-index: 20;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
@@ -96,6 +98,31 @@
   color: var(--primary-light);
 }
 
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.signup-button {
+  padding: 11px 18px;
+  border: 1px solid var(--primary);
+  border-radius: 9px;
+  background: var(--white);
+  color: var(--primary);
+  font-size: 15px;
+  font-weight: 600;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.signup-button:hover {
+  background: var(--primary-soft);
+  transform: translateY(-1px);
+}
+
 .login-button {
   padding: 11px 22px;
 
@@ -115,6 +142,104 @@
 .login-button:hover {
   background: var(--primary-light);
   transform: translateY(-1px);
+}
+
+.navbar-account {
+  position: relative;
+}
+
+.navbar-account-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  max-width: min(360px, 55vw);
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--white);
+  color: var(--primary);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.navbar-account-trigger:hover {
+  border-color: var(--primary-light);
+  background: var(--primary-soft);
+}
+
+.navbar-account-trigger:focus-visible,
+.navbar-account-menu button:focus-visible {
+  outline: 3px solid var(--primary-light);
+  outline-offset: 3px;
+}
+
+.navbar-account-trigger span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar-account-trigger svg:last-child {
+  flex: none;
+  transition: transform 0.2s ease;
+}
+
+.navbar-account-trigger svg:last-child.is-open { transform: rotate(180deg); }
+
+.navbar-account-menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  min-width: 220px;
+  max-width: min(280px, calc(100vw - 24px));
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+  box-shadow: 0 12px 30px rgba(18, 59, 74, 0.16);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity 200ms ease, transform 200ms ease, visibility 200ms ease 200ms;
+}
+
+.navbar-account-menu.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition-delay: 0ms;
+}
+
+.navbar-account-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.navbar-account-menu button svg { flex: none; }
+
+.navbar-account-menu button:hover { background: var(--primary-soft); color: var(--primary); }
+.navbar-account-menu .navbar-account-logout { border-top: 1px solid var(--border); border-radius: 0 0 7px 7px; color: #a12b32; }
+.navbar-account-menu .navbar-account-logout:hover { background: #fff0f0; color: #812027; }
+
+@media (prefers-reduced-motion: reduce) {
+  .navbar-account-menu { transition-duration: 1ms; transition-delay: 0ms; }
 }
 
 
@@ -680,6 +805,16 @@
 
   .nav-links {
     display: none;
+  }
+
+  .navbar-actions {
+    gap: 7px;
+  }
+
+  .signup-button,
+  .navbar-account-trigger {
+    padding: 9px 11px;
+    font-size: 13px;
   }
 
   .hero-section {

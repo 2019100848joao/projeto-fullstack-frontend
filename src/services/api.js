@@ -19,8 +19,8 @@ async function request(path, options = {}) {
     }
     return await response.json();
   } catch (error) {
-    if (error.name === 'AbortError') throw new Error('A solicitação demorou demais. Tente novamente.');
-    if (error instanceof TypeError) throw new Error('Não foi possível conectar à clínica. Tente novamente mais tarde.');
+    if (error.name === 'AbortError') throw new Error('A solicitação demorou demais. Tente novamente.', { cause: error });
+    if (error instanceof TypeError) throw new Error('Não foi possível conectar à clínica. Tente novamente mais tarde.', { cause: error });
     throw error;
   } finally {
     clearTimeout(timeout);
