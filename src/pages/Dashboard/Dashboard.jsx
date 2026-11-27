@@ -34,7 +34,7 @@ const areaNames = {
   patient: 'Área do paciente',
 };
 
-function Dashboard({ user, initialSection = 'home', onLogout, onHome }) {
+function Dashboard({ user, initialSection = 'home', onLogout }) {
   const [section, setSection] = useState(initialSection);
   const [compactLayout, setCompactLayout] = useState(false);
   const [manualCollapsed, setManualCollapsed] = useState(null);
@@ -79,7 +79,7 @@ function Dashboard({ user, initialSection = 'home', onLogout, onHome }) {
             aria-label="Clínica Saúde — página inicial"
             onClick={(event) => {
               event.preventDefault();
-              onHome();
+              navigateTo('home');
             }}
           >
             <span className="dashboard-brand-icon"><HeartPulse size={22} aria-hidden="true" /></span>

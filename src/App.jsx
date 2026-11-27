@@ -233,15 +233,8 @@ function AppContent() {
   );
   const missingTypes = DOCUMENT_TYPES.filter((type) => !savedTypes.has(type));
   const hasRequiredDocument = missingTypes.length < DOCUMENT_TYPES.length;
-  const landingPageIsVisible = !(
-    (user && screen === "dashboard") ||
-    (!user && screen === "login") ||
-    screen === "signup"
-  );
-
   const reminderOpen = Boolean(
-    user && landingPageIsVisible &&
-    !hasRequiredDocument && dismissedReminderFor !== user.id,
+    user && !hasRequiredDocument && dismissedReminderFor !== user.id,
   );
   let currentScreen;
 
@@ -251,17 +244,16 @@ function AppContent() {
         user={user}
         initialSection={dashboardInitialSection}
         onLogout={leave}
-        onHome={() => {
-          setDashboardInitialSection("home");
-          setScreen("home");
-        }}
       />
     );
   } else if (screen === "login" && !user) {
     currentScreen = (
       <Login
         onCancel={() => setScreen("home")}
-        onSuccess={() => setScreen("home")}
+        onSuccess={() => {
+          setDashboardInitialSection("home");
+          setScreen("dashboard");
+        }}
         onRegister={() => setScreen("signup")}
       />
     );

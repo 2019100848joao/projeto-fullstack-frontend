@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, CircleUserRound, LogOut, UserRound } from 'lucide-react';
+import { ChevronDown, CircleUserRound, HeartPulse, LogOut, UserRound } from 'lucide-react';
 
 function Navbar({ user, onLogin, onSignUp, onLogout, onNavigateToProfile }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -62,7 +62,7 @@ function Navbar({ user, onLogin, onSignUp, onLogout, onNavigateToProfile }) {
     <header className="navbar">
       <a href="#" className="logo">
         <span className="logo-icon">
-          <span className="logo-plus">+</span>
+          <HeartPulse size={20} aria-hidden="true" />
         </span>
         Clínica Saúde
       </a>
