@@ -1,8 +1,8 @@
-﻿import React, { useState } from 'react';
+import { useState } from 'react';
 import { ArrowRight, Eye, EyeOff, HeartPulse, LoaderCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 
-export default function Login({ onCancel }) {
+export default function Login({ onCancel, onSuccess }) {
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,6 +17,7 @@ export default function Login({ onCancel }) {
     setPending(true);
     try {
       await signIn(email.trim(), password);
+      onSuccess?.();
     } catch (error) {
       setError(error.message);
     } finally {
