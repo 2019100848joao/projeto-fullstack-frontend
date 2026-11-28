@@ -150,6 +150,15 @@ input:focus {
   padding: 12px;
   margin: 0 0 20px;
 }
+.login-notice {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #6b4a00;
+  background: #fff7e0;
+  border-left: 3px solid #d79b00;
+  padding: 12px;
+  margin: 0 0 20px;
+}
 .login-footer {
   text-align: center;
   padding: 24px;

@@ -18,25 +18,6 @@ function tokenExpiresAt(token) {
 }
 
 const TOKEN_KEY = 'clinic_access_token';
-const apiBase = () =>
-  (import.meta.env.VITE_API_URL || "/api").replace(/\/$/, "");
-
-function documentRequestError(status) {
-  const messages = {
-    401: "Sua sessão expirou. Entre novamente para cadastrar o documento.",
-    403: "Sua conta está inativa e não pode cadastrar documentos.",
-    404: "O tipo de documento selecionado não está cadastrado na clínica.",
-    409: "Já existe um documento cadastrado para um desses tipos.",
-    422: "Confira os documentos informados e tente novamente.",
-  };
-  const error = new Error(
-    messages[status] || "Não foi possível salvar o documento. Tente novamente.",
-  );
-  error.status = status;
-  return error;
-}
-
-
 function getStoredToken() {
   try {
     return localStorage.getItem(TOKEN_KEY);
@@ -67,6 +48,8 @@ export function AuthProvider({ children }) {
   const [restoreStatus, setRestoreStatus] = useState(storedToken ? 'restoring' : 'ready');
   const [restoreAttempt, setRestoreAttempt] = useState(0);
   const restoreGeneration = useRef(0);
+  // Why the last session ended on its own (shown on the login screen); empty otherwise.
+  const [sessionNotice, setSessionNotice] = useState('');
 
   useEffect(() => {
     function handleStorage(event) {
@@ -117,6 +100,7 @@ export function AuthProvider({ children }) {
     }
     storeToken(token);
     setSession({ token, user });
+    setSessionNotice('');
   }
 
   const logout = useCallback(() => {
@@ -125,6 +109,7 @@ export function AuthProvider({ children }) {
     setStoredToken(null);
     setSession(null);
     setRestoreStatus('ready');
+    setSessionNotice('');
   }, []);
 
   const token = session?.token;
@@ -137,6 +122,7 @@ export function AuthProvider({ children }) {
         setStoredToken(null);
       }
       setSession((current) => (current?.token === token ? null : current));
+      setSessionNotice('Sua sessão expirou. Entre novamente para continuar.');
     });
   }, [token]);
 
@@ -177,79 +163,44 @@ export function AuthProvider({ children }) {
     };
   }, [token]);
 
+  // Reloads the signed-in user (e.g. after an admin changed their role).
+  const refreshUser = useCallback(async () => {
+    if (!token) return;
+    const user = await getCurrentUser(token);
+    setSession((current) => (current?.token === token ? { ...current, user } : current));
+  }, [token]);
+
   function retryRestore() {
     setRestoreStatus('restoring');
     setRestoreAttempt((attempt) => attempt + 1);
   }
 
+  // Saves CPF/RG documents for the signed-in user, resolving type names (e.g. "CPF") to their ids.
   async function registerDocument(documents) {
-    if (!session) throw documentRequestError(401);
+    if (!api) throw new Error('Sua sessão expirou. Entre novamente.');
     const requested = Array.isArray(documents) ? documents : [documents];
-    if (!requested.length) throw documentRequestError(422);
-
-    let typesResponse;
-    try {
-      typesResponse = await fetch(`${apiBase()}/document-types`);
-    } catch {
-      throw new Error("Não foi possível carregar os tipos de documento.");
+    const normalize = (type) => String(type || '').trim().toLocaleUpperCase('pt-BR');
+    if (!requested.length || new Set(requested.map(({ type }) => normalize(type))).size !== requested.length
+      || requested.some(({ type, value }) => !normalize(type) || !String(value || '').trim())) {
+      throw new Error('Confira os documentos informados e tente novamente.');
     }
-    if (!typesResponse.ok) throw documentRequestError(typesResponse.status);
-    const availableTypes = await typesResponse.json();
-    if (!Array.isArray(availableTypes)) throw documentRequestError(422);
 
-    const seenTypes = new Set();
+    const availableTypes = await api.listDocumentTypes();
     const payload = requested.map(({ type, value }) => {
-      const normalizedType = String(type || "")
-        .trim()
-        .toLocaleUpperCase("pt-BR");
-      if (
-        !normalizedType ||
-        seenTypes.has(normalizedType) ||
-        !String(value || "").trim()
-      ) {
-        throw documentRequestError(422);
-      }
-      seenTypes.add(normalizedType);
-      const documentType = availableTypes.find(
-        (entry) =>
-          String(entry.type || "")
-            .trim()
-            .toLocaleUpperCase("pt-BR") === normalizedType,
-      );
-      if (!documentType) throw documentRequestError(404);
+      const documentType = availableTypes.find((entry) => normalize(entry.type) === normalize(type));
+      if (!documentType) throw new Error('O tipo de documento selecionado não está cadastrado na clínica.');
       return { type_id: documentType.id, value: String(value).trim() };
     });
 
-    let response;
-    try {
-      response = await fetch(`${apiBase()}/users/me/documents`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      throw new Error("Não foi possível conectar à clínica. Tente novamente.");
-    }
-    if (!response.ok) throw documentRequestError(response.status);
-    const createdDocuments = await response.json();
-    if (!Array.isArray(createdDocuments)) throw documentRequestError(422);
-
+    const createdDocuments = await api.registerDocuments(payload);
     setSession((current) => {
-      if (!current || current.token !== session.token) return current;
-      const existingIds = new Set(
-        (current.user.documents || []).map((doc) => doc.id),
-      );
+      if (current?.token !== token) return current;
+      const existingIds = new Set((current.user.documents || []).map((document) => document.id));
       return {
         ...current,
         user: {
           ...current.user,
-          documents: [
-            ...(current.user.documents || []),
-            ...createdDocuments.filter((doc) => !existingIds.has(doc.id)),
-          ],
+          documents: [...(current.user.documents || []), ...createdDocuments.filter((document) => !existingIds.has(document.id))],
         },
       };
     });
@@ -257,7 +208,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user: session?.user ?? null, api, signIn, logout, restoreStatus, retryRestore, registerDocument }}>
+    <AuthContext.Provider value={{ user: session?.user ?? null, api, signIn, logout, restoreStatus, retryRestore, registerDocument, refreshUser, sessionNotice, clearSessionNotice: () => setSessionNotice('') }}>
       {children}
     </AuthContext.Provider>
   );

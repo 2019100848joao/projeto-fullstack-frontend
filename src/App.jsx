@@ -7,6 +7,7 @@ import SignUp from "./pages/SignUp.jsx";
 import Home from "./pages/Home/Home.jsx";
 import Dashboard from "./pages/Dashboard/Dashboard.jsx";
 import SuccessToast from "./components/SuccessToast.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
 const DOCUMENT_TYPES = ["CPF", "RG"];
 
@@ -191,7 +192,7 @@ function Reminder({ open, missingTypes, onDismiss, onSuccess }) {
 }
 
 function AppContent() {
-  const { user, logout, restoreStatus, retryRestore } = useAuth();
+  const { user, logout, restoreStatus, retryRestore, sessionNotice, clearSessionNotice } = useAuth();
   const [screen, setScreen] = useState("dashboard");
   const [dashboardInitialSection, setDashboardInitialSection] = useState("home");
   const [dismissedReminderFor, setDismissedReminderFor] = useState(null);
@@ -246,15 +247,22 @@ function AppContent() {
         onLogout={leave}
       />
     );
-  } else if (screen === "login" && !user) {
+  } else if (!user && (screen === "login" || sessionNotice)) {
     currentScreen = (
       <Login
-        onCancel={() => setScreen("home")}
+        notice={sessionNotice}
+        onCancel={() => {
+          clearSessionNotice();
+          setScreen("home");
+        }}
         onSuccess={() => {
           setDashboardInitialSection("home");
           setScreen("dashboard");
         }}
-        onRegister={() => setScreen("signup")}
+        onRegister={() => {
+          clearSessionNotice();
+          setScreen("signup");
+        }}
       />
     );
   } else if (screen === "signup") {
@@ -298,7 +306,7 @@ function AppContent() {
 
   return (
     <>
-      {currentScreen}
+      <ErrorBoundary>{currentScreen}</ErrorBoundary>
       <Reminder
         key={user?.id ?? "anonymous"}
         open={reminderOpen}

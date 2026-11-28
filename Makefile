@@ -1,5 +1,7 @@
 IMAGE ?= clinic-frontend
 PORT ?= 8080
+NETWORK ?= clinic
+API_UPSTREAM ?= http://clinic_api:8000
 
 .PHONY: install run dev build preview test lint check docker-build docker-run
 
@@ -29,4 +31,5 @@ docker-build:
 	docker build -t $(IMAGE) .
 
 docker-run:
-	docker run --rm -p $(PORT):8080 $(IMAGE)
+	docker run --rm -p 127.0.0.1:$(PORT):8080 --network $(NETWORK) \
+		-e API_UPSTREAM=$(API_UPSTREAM) $(IMAGE)

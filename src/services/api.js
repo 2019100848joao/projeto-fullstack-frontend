@@ -18,6 +18,11 @@ const detailMessages = {
   'doctor_id is required for admin users': 'Selecione um médico para ver a agenda.',
   'patient_id must reference an active user with the patient role': 'Selecione um paciente ativo.',
   'doctor_id must reference an active user with the doctor role': 'Selecione um médico ativo.',
+  'User already has a pending role transition request': 'Você já tem uma solicitação em análise. Aguarde a resposta da administração.',
+  'Role transition is not valid for the current user role': 'Sua conta já tem este cargo ou não pode solicitar esta mudança.',
+  'Role transition request has already been reviewed': 'Esta solicitação já foi analisada.',
+  "Role transition is no longer valid for the user's current role": 'O cargo do usuário mudou e esta solicitação não é mais válida.',
+  'Role transition request not found': 'Solicitação não encontrada.',
 };
 
 async function request(path, { token, method = 'GET', body, query, messages = {} } = {}) {
@@ -121,5 +126,26 @@ export function createClinicApi(token, onUnauthorized) {
     scheduleExam: (id, scheduledAt) => call(`/exams/${id}/schedule`, { method: 'POST', body: { scheduled_at: scheduledAt } }),
     markExamPerformed: (id) => call(`/exams/${id}/perform`, { method: 'POST' }),
     registerExamResult: (id, result) => call(`/exams/${id}/result`, { method: 'POST', body: { result } }),
+
+    requestRoleTransition: (requestedRole) => call('/role-transitions', { method: 'POST', body: { requested_role: requestedRole } }),
+    listMyRoleTransitions: () => call('/role-transitions/me'),
+    listRoleTransitions: (status) => call('/role-transitions', { query: { status } }),
+    approveRoleTransition: (id) => call(`/role-transitions/${id}/approve`, { method: 'POST' }),
+    rejectRoleTransition: (id) => call(`/role-transitions/${id}/reject`, { method: 'POST' }),
+
+    listEmailNotifications: () => call('/notifications/emails'),
+
+    listDocumentTypes: () => call('/document-types', { messages: { default: 'Não foi possível carregar os tipos de documento.' } }),
+    registerDocuments: (documents) => call('/users/me/documents', {
+      method: 'POST',
+      body: documents,
+      messages: {
+        403: 'Sua conta está inativa e não pode cadastrar documentos.',
+        404: 'O tipo de documento selecionado não está cadastrado na clínica.',
+        409: 'Já existe um documento cadastrado para um desses tipos.',
+        422: 'Confira os documentos informados e tente novamente.',
+        default: 'Não foi possível salvar o documento. Tente novamente.',
+      },
+    }),
   };
 }

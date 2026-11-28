@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { CalendarClock, CalendarDays, ChevronRight, FileText, HeartPulse, Home, LogOut, PanelLeftClose, PanelLeftOpen, UserRound, Users } from 'lucide-react';
+import { Bell, CalendarClock, CalendarDays, ChevronRight, FileText, HeartPulse, Home, LogOut, Mail, PanelLeftClose, PanelLeftOpen, UserCog, UserRound, Users } from 'lucide-react';
 import Patient from '../Patient/Patient.jsx';
 import DoctorPatients from '../DoctorPatients/DoctorPatients.jsx';
 import Appointments from '../Appointments/Appointments.jsx';
@@ -7,6 +7,9 @@ import Calendar from '../Calendar/Calendar.jsx';
 import Exams from '../Exams/Exams.jsx';
 import PatientAppointments from '../PatientAppointments/PatientAppointments.jsx';
 import Profile from '../Profile/Profile.jsx';
+import RoleTransitions from '../RoleTransitions/RoleTransitions.jsx';
+import Notifications from '../Notifications/Notifications.jsx';
+import ErrorBoundary from '../../components/ErrorBoundary.jsx';
 import './Dashboard.css';
 
 const roleNames = {
@@ -19,12 +22,13 @@ const roleNames = {
 const home = { id: 'home', label: 'Início', icon: Home };
 const profile = { id: 'profile', label: 'Meu perfil', icon: UserRound };
 const exams = { id: 'exams', label: 'Exames', icon: FileText };
+const notifications = { id: 'notifications', label: 'Notificações', icon: Bell };
 
 const navigationByRole = {
-  admin: [home, profile, { id: 'appointments', label: 'Agendamentos', icon: CalendarDays }, { id: 'calendar', label: 'Agenda médica', icon: CalendarClock }, exams],
-  attendant: [home, profile, { id: 'appointments', label: 'Agendamentos', icon: CalendarDays }, exams],
-  doctor: [home, profile, { id: 'calendar', label: 'Agenda', icon: CalendarDays }, { id: 'patients', label: 'Pacientes', icon: Users }, exams],
-  patient: [home, profile, { id: 'appointments', label: 'Consultas', icon: CalendarDays }, exams],
+  admin: [home, profile, { id: 'appointments', label: 'Agendamentos', icon: CalendarDays }, { id: 'calendar', label: 'Agenda médica', icon: CalendarClock }, exams, { id: 'role-transitions', label: 'Solicitações de cargo', icon: UserCog }, { id: 'notifications', label: 'E-mails', icon: Mail }],
+  attendant: [home, profile, { id: 'appointments', label: 'Agendamentos', icon: CalendarDays }, exams, notifications],
+  doctor: [home, profile, { id: 'calendar', label: 'Agenda', icon: CalendarDays }, { id: 'patients', label: 'Pacientes', icon: Users }, exams, notifications],
+  patient: [home, profile, { id: 'appointments', label: 'Consultas', icon: CalendarDays }, exams, notifications],
 };
 
 const areaNames = {
@@ -137,53 +141,59 @@ function Dashboard({ user, initialSection = 'home', onLogout }) {
           <span>{areaNames[user.role] || 'Área do usuário'}</span>
         </div>
 
-        {activeSection === 'profile' ? (
-          <Profile user={user} />
-        ) : activeSection === 'exams' ? (
-          <Exams user={user} />
-        ) : activeSection === 'calendar' ? (
-          <Calendar user={user} />
-        ) : activeSection === 'appointments' ? (
-          isPatient ? <PatientAppointments /> : <Appointments />
-        ) : activeSection === 'patients' ? (
-          <DoctorPatients />
-        ) : isPatient ? (
-          <Patient user={user} onNavigate={navigateTo} />
-        ) : (
-          <section className="dashboard-content" aria-labelledby="dashboard-title">
-            <div className="dashboard-page-heading">
-              <span className="dashboard-eyebrow">VISÃO GERAL</span>
-              <h1 id="dashboard-title">Olá, {user.full_name}</h1>
-              <p>Bem-vindo à sua área na Clínica Saúde.</p>
-            </div>
-            <div className="dashboard-welcome-card">
-              <div>
-                <span className="dashboard-card-label">SUA ÁREA</span>
-                <h2>{isDoctor ? 'Seu espaço de trabalho' : 'Tudo em um só lugar'}</h2>
-                <p>
-                  {isDoctor
-                    ? 'Acesse sua agenda e registre os atendimentos pelo menu lateral.'
-                    : 'Esta é a sua página inicial na plataforma.'}
-                </p>
-                {isDoctor && (
-                  <button type="button" className="dashboard-card-action" onClick={() => navigateTo('calendar')}>
-                    Ver agenda <ChevronRight size={18} aria-hidden="true" />
-                  </button>
-                )}
+        <ErrorBoundary resetKey={activeSection}>
+          {activeSection === 'profile' ? (
+            <Profile user={user} />
+          ) : activeSection === 'role-transitions' ? (
+            <RoleTransitions />
+          ) : activeSection === 'notifications' ? (
+            <Notifications user={user} />
+          ) : activeSection === 'exams' ? (
+            <Exams user={user} />
+          ) : activeSection === 'calendar' ? (
+            <Calendar user={user} />
+          ) : activeSection === 'appointments' ? (
+            isPatient ? <PatientAppointments /> : <Appointments />
+          ) : activeSection === 'patients' ? (
+            <DoctorPatients />
+          ) : isPatient ? (
+            <Patient user={user} onNavigate={navigateTo} />
+          ) : (
+            <section className="dashboard-content" aria-labelledby="dashboard-title">
+              <div className="dashboard-page-heading">
+                <span className="dashboard-eyebrow">VISÃO GERAL</span>
+                <h1 id="dashboard-title">Olá, {user.full_name}</h1>
+                <p>Bem-vindo à sua área na Clínica Saúde.</p>
               </div>
-              <span className="dashboard-card-decoration" aria-hidden="true"><HeartPulse size={88} /></span>
-            </div>
-            <div className="dashboard-account-card">
-              <span className="dashboard-card-label">CONTA</span>
-              <h2>Seus dados</h2>
-              <dl>
-                <div><dt>Nome</dt><dd>{user.full_name}</dd></div>
-                <div><dt>E-mail</dt><dd>{user.email}</dd></div>
-                <div><dt>Perfil</dt><dd>{roleNames[user.role] || 'Usuário'}</dd></div>
-              </dl>
-            </div>
-          </section>
-        )}
+              <div className="dashboard-welcome-card">
+                <div>
+                  <span className="dashboard-card-label">SUA ÁREA</span>
+                  <h2>{isDoctor ? 'Seu espaço de trabalho' : 'Tudo em um só lugar'}</h2>
+                  <p>
+                    {isDoctor
+                      ? 'Acesse sua agenda e registre os atendimentos pelo menu lateral.'
+                      : 'Esta é a sua página inicial na plataforma.'}
+                  </p>
+                  {isDoctor && (
+                    <button type="button" className="dashboard-card-action" onClick={() => navigateTo('calendar')}>
+                      Ver agenda <ChevronRight size={18} aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+                <span className="dashboard-card-decoration" aria-hidden="true"><HeartPulse size={88} /></span>
+              </div>
+              <div className="dashboard-account-card">
+                <span className="dashboard-card-label">CONTA</span>
+                <h2>Seus dados</h2>
+                <dl>
+                  <div><dt>Nome</dt><dd>{user.full_name}</dd></div>
+                  <div><dt>E-mail</dt><dd>{user.email}</dd></div>
+                  <div><dt>Perfil</dt><dd>{roleNames[user.role] || 'Usuário'}</dd></div>
+                </dl>
+              </div>
+            </section>
+          )}
+        </ErrorBoundary>
       </main>
     </div>
   );

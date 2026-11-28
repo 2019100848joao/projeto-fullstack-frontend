@@ -128,3 +128,7 @@ select, textarea { font: inherit; }
 .patient-appointments-title { margin: 0 0 16px; color: #123b4a; font-size: 20px; }
 .calendar-no-show { display: grid; gap: 10px; margin-bottom: 18px; padding: 14px 16px; border-radius: 10px; background: #fff8eb; }
 .calendar-no-show .clinic-form-actions { justify-content: flex-start; margin: 0; }
+
+/* Error boundary */
+.error-boundary-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
+.error-boundary { max-width: 640px; margin: 48px auto; }

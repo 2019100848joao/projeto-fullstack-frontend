@@ -19,6 +19,30 @@ export function displayStatus(appointment) {
   return isOverdue(appointment) ? 'overdue' : appointment.status;
 }
 
+export const roleNames = {
+  admin: 'Administração',
+  attendant: 'Atendente',
+  doctor: 'Médico',
+  patient: 'Paciente',
+};
+
+/** Roles a user can ask to move to (the backend accepts only these). */
+export const transitionRoles = ['doctor', 'attendant'];
+
+export const transitionStatus = {
+  pending: { label: 'Em análise', tone: 'warning' },
+  approved: { label: 'Aprovada', tone: 'success' },
+  rejected: { label: 'Recusada', tone: 'muted' },
+};
+
+export const emailEvents = {
+  user_registered: 'Cadastro',
+  role_transition_requested: 'Solicitação enviada',
+  role_transition_admin_alert: 'Alerta à administração',
+  role_transition_approved: 'Solicitação aprovada',
+  role_transition_rejected: 'Solicitação recusada',
+};
+
 export const examStatus = {
   requested: { label: 'Solicitado', tone: 'warning' },
   scheduled: { label: 'Agendado', tone: 'info' },

@@ -33,14 +33,27 @@ so no CORS setup is needed. To point to another backend, set `VITE_API_URL`
 
 ## Docker
 
+The image builds the app and serves it with nginx, which also proxies `/api/*` to
+the backend container (same origin, so no CORS). Both containers share the Docker
+network `clinic`, created by the backend's `docker-compose.yml`.
+
 ```bash
-make docker-build                  # or: docker build --build-arg VITE_API_URL=https://api.example.com -t clinic-frontend .
+# 1. In the backend folder: start Postgres + API (creates the "clinic" network)
+make up
+
+# 2. Here: build and run the frontend on that network
+make docker-build
 make docker-run                    # http://127.0.0.1:8080
 ```
 
-The image serves the static build with nginx and does **not** proxy `/api`. Build it
-with `VITE_API_URL` set to the public backend URL, and enable CORS for the frontend
-origin on the backend.
+`make docker-run` is `docker run -p 127.0.0.1:8080:8080 --network clinic -e API_UPSTREAM=http://clinic_api:8000 clinic-frontend`.
+Override with `PORT`, `NETWORK` or `API_UPSTREAM`. nginx resolves the backend on each
+request, so the frontend starts even if the API is not up yet (API calls answer `502`
+until it is).
+
+To serve the frontend against a backend on another host instead, either point
+`API_UPSTREAM` to its URL, or build with `--build-arg VITE_API_URL=https://api.example.com`
+and enable CORS for the frontend origin on the backend.
 
 ## Features by role
 
@@ -50,8 +63,8 @@ origin on the backend.
 | Patient | Home, **Minhas consultas** (upcoming and past), **Meus exames** with results |
 | Attendant | **Agendamentos**: schedule, reschedule, cancel and register no-shows; **Exames**: schedule and mark as performed |
 | Doctor | **Agenda** (day, week, month) with attendance record, exam requests and no-show; **Pacientes** attended; **Exames**, registering the result of the ones they requested |
-| Admin | Everything the attendant does, plus the calendar of any doctor |
-| Any signed-in user | **Meu perfil** with CPF/RG documents, and a reminder to register one |
+| Admin | Everything the attendant does, plus the calendar of any doctor; **Solicitações de cargo** (approve or reject role requests) and **E-mails** (log of every e-mail the system recorded) |
+| Any signed-in user | **Meu perfil** with CPF/RG documents, and a reminder to register one. Non-admins can also ask there to become a doctor or attendant and follow the request; **Notificações** lists the e-mails sent to them |
 
 Business rules mirrored in the UI (the backend remains the authority and rejects
 violations on its own):
@@ -62,7 +75,10 @@ violations on its own):
   slot at once. Business hours are only enforced in the frontend.
 - Attendance and no-shows can only be registered once the appointment time has passed.
 - Only the doctor who requested an exam registers its result.
-- Public sign-up creates **patient** accounts only; the role is never sent.
+- Public sign-up creates **patient** accounts only; the role is never sent. Other roles
+  come from a request in **Meu perfil** that an admin approves. Only one request can be
+  pending at a time; once approved, the user's menus switch to the new role the next
+  time they open their profile or notifications (no new login needed).
 
 ## Project structure
 
@@ -82,10 +98,13 @@ src/
 - The backend issues a JWT access token (30 minutes) at login. It is kept in
   `localStorage` so the session survives a reload, and sent as
   `Authorization: Bearer` on each request. Pages never handle the token directly:
-  they use the `api` object from `useAuth()`, and a `401` ends the session.
+  they use the `api` object from `useAuth()` (document registration included), and a `401`
+  ends the session and opens the login screen with "Sua sessão expirou".
 - The session is renewed through `POST /auth/refresh` about two minutes before it
   expires, **only if the user clicked or typed since the last renewal**. An idle
   session expires and the user has to log in again.
+- If a screen crashes while rendering, an error boundary shows "Algo deu errado nesta tela"
+  with retry and reload buttons instead of a blank page; switching sections clears it.
 - No clinical data is stored in the browser.
 - Known limitation: a token in `localStorage` can be read by any script running on
   the page, so an XSS flaw would expose it. A stronger option is an `HttpOnly`,
@@ -100,5 +119,4 @@ src/
   single-use tokens that expire in about 30 minutes, stores only their hash, and
   always answers the same way whether the e-mail exists or not. The backend must
   implement it first (see its README).
-- Role management screens: handled by other team members.
 - Patient-uploaded exam files: out of scope, since exams are performed at the clinic.

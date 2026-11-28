@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useAuth } from '../../contexts/auth.js';
 import SuccessToast from '../../components/SuccessToast.jsx';
+import RoleRequestCard from '../RoleTransitions/RoleRequestCard.jsx';
 
 const roleNames = {
   admin: 'Administração',
@@ -148,6 +149,8 @@ export default function Profile({ user }) {
             </>
           )}
         </div>
+
+        {user.role !== 'admin' && <RoleRequestCard user={user} />}
       </section>
       {toast && <SuccessToast key={toast.id} message={toast.message} variant={toast.variant} />}
     </>

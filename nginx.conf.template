@@ -8,6 +8,20 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
+    # Same-origin API: the browser calls /api/*, nginx forwards it to the backend
+    # container without the /api prefix. Resolving per request (Docker DNS) lets
+    # nginx start even before the backend is up.
+    location /api/ {
+        resolver 127.0.0.11 valid=10s ipv6=off;
+        set $api_upstream ${API_UPSTREAM};
+        rewrite ^/api/(.*)$ /$1 break;
+        proxy_pass $api_upstream;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
     location /assets/ {
         try_files $uri =404;
         expires 1y;
