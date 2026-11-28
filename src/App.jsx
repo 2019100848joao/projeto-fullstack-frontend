@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { AuthProvider, useAuth } from "./contexts/AuthContext.jsx";
+import { AuthProvider } from "./contexts/AuthContext.jsx";
+import { useAuth } from "./contexts/auth.js";
+import { register } from "./services/api.js";
 import Login from "./pages/Login/Login.jsx";
 import SignUp from "./pages/SignUp.jsx";
 import Home from "./pages/Home/Home.jsx";
 import Dashboard from "./pages/Dashboard/Dashboard.jsx";
 import SuccessToast from "./components/SuccessToast.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
 const DOCUMENT_TYPES = ["CPF", "RG"];
-const apiBase = () => (import.meta.env.VITE_API_URL || "/api").replace(/\/$/, "");
 
 function Reminder({ open, missingTypes, onDismiss, onSuccess }) {
   const { registerDocument } = useAuth();
@@ -190,7 +192,7 @@ function Reminder({ open, missingTypes, onDismiss, onSuccess }) {
 }
 
 function AppContent() {
-  const { user, logout, restoreStatus, retryRestore } = useAuth();
+  const { user, logout, restoreStatus, retryRestore, sessionNotice, clearSessionNotice } = useAuth();
   const [screen, setScreen] = useState("dashboard");
   const [dashboardInitialSection, setDashboardInitialSection] = useState("home");
   const [dismissedReminderFor, setDismissedReminderFor] = useState(null);
@@ -232,15 +234,8 @@ function AppContent() {
   );
   const missingTypes = DOCUMENT_TYPES.filter((type) => !savedTypes.has(type));
   const hasRequiredDocument = missingTypes.length < DOCUMENT_TYPES.length;
-  const landingPageIsVisible = !(
-    (user && screen === "dashboard") ||
-    (!user && screen === "login") ||
-    screen === "signup"
-  );
-
   const reminderOpen = Boolean(
-    user && landingPageIsVisible &&
-    !hasRequiredDocument && dismissedReminderFor !== user.id,
+    user && !hasRequiredDocument && dismissedReminderFor !== user.id,
   );
   let currentScreen;
 
@@ -250,17 +245,24 @@ function AppContent() {
         user={user}
         initialSection={dashboardInitialSection}
         onLogout={leave}
-        onHome={() => {
-          setDashboardInitialSection("home");
-          setScreen("home");
-        }}
       />
     );
-  } else if (screen === "login" && !user) {
+  } else if (!user && (screen === "login" || sessionNotice)) {
     currentScreen = (
       <Login
-        onCancel={() => setScreen("home")}
-        onSuccess={() => setScreen("home")}
+        notice={sessionNotice}
+        onCancel={() => {
+          clearSessionNotice();
+          setScreen("home");
+        }}
+        onSuccess={() => {
+          setDashboardInitialSection("home");
+          setScreen("dashboard");
+        }}
+        onRegister={() => {
+          clearSessionNotice();
+          setScreen("signup");
+        }}
       />
     );
   } else if (screen === "signup") {
@@ -268,30 +270,7 @@ function AppContent() {
       <SignUp
         onCancel={() => setScreen("home")}
         onSubmit={async (data) => {
-          let response;
-          try {
-            response = await fetch(`${apiBase()}/auth/register`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                full_name: data.full_name,
-                email: data.email,
-                password: data.password,
-              }),
-            });
-          } catch {
-            throw new Error("Não foi possível conectar à clínica. Tente novamente.");
-          }
-
-          if (response.status === 409) {
-            throw new Error("Este e-mail já está cadastrado. Entre na sua conta ou use outro e-mail.");
-          }
-          if (response.status === 422) {
-            throw new Error("Confira nome, e-mail e senha. A API rejeitou os dados informados.");
-          }
-          if (response.status !== 201) {
-            throw new Error("Não foi possível criar a conta. Tente novamente mais tarde.");
-          }
+          await register({ fullName: data.full_name, email: data.email, password: data.password });
           setScreen("login");
         }}
       />
@@ -327,7 +306,7 @@ function AppContent() {
 
   return (
     <>
-      {currentScreen}
+      <ErrorBoundary>{currentScreen}</ErrorBoundary>
       <Reminder
         key={user?.id ?? "anonymous"}
         open={reminderOpen}

@@ -1,26 +1,23 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { login, getCurrentUser } from "../services/api.js";
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AuthContext } from './auth.js';
+import { createClinicApi, getCurrentUser, login, refreshToken } from '../services/api.js';
 
-const AuthContext = createContext(null);
-const TOKEN_KEY = "clinic_access_token";
-const apiBase = () =>
-  (import.meta.env.VITE_API_URL || "/api").replace(/\/$/, "");
+// Renew this long before expiry, and only for a user who interacted since the last renewal:
+// an idle session still expires instead of staying open forever.
+const REFRESH_BEFORE_EXPIRY_MS = 2 * 60 * 1000;
+const ACTIVITY_EVENTS = ['pointerdown', 'keydown'];
 
-function documentRequestError(status) {
-  const messages = {
-    401: "Sua sessão expirou. Entre novamente para cadastrar o documento.",
-    403: "Sua conta está inativa e não pode cadastrar documentos.",
-    404: "O tipo de documento selecionado não está cadastrado na clínica.",
-    409: "Já existe um documento cadastrado para um desses tipos.",
-    422: "Confira os documentos informados e tente novamente.",
-  };
-  const error = new Error(
-    messages[status] || "Não foi possível salvar o documento. Tente novamente.",
-  );
-  error.status = status;
-  return error;
+// Reads the `exp` claim only to schedule the renewal; the backend still validates the token.
+function tokenExpiresAt(token) {
+  try {
+    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(payload)).exp * 1000;
+  } catch {
+    return null;
+  }
 }
 
+const TOKEN_KEY = 'clinic_access_token';
 function getStoredToken() {
   try {
     return localStorage.getItem(TOKEN_KEY);
@@ -48,11 +45,11 @@ function removeStoredToken() {
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [storedToken, setStoredToken] = useState(getStoredToken);
-  const [restoreStatus, setRestoreStatus] = useState(
-    storedToken ? "restoring" : "ready",
-  );
+  const [restoreStatus, setRestoreStatus] = useState(storedToken ? 'restoring' : 'ready');
   const [restoreAttempt, setRestoreAttempt] = useState(0);
   const restoreGeneration = useRef(0);
+  // Why the last session ended on its own (shown on the login screen); empty otherwise.
+  const [sessionNotice, setSessionNotice] = useState('');
 
   useEffect(() => {
     function handleStorage(event) {
@@ -62,11 +59,11 @@ export function AuthProvider({ children }) {
       restoreGeneration.current += 1;
       setSession(null);
       setStoredToken(nextToken);
-      setRestoreStatus(nextToken ? "restoring" : "ready");
+      setRestoreStatus(nextToken ? 'restoring' : 'ready');
     }
 
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
   useEffect(() => {
@@ -78,22 +75,20 @@ export function AuthProvider({ children }) {
       .then((user) => {
         if (!active || generation !== restoreGeneration.current) return;
         setSession({ token: storedToken, user });
-        setRestoreStatus("ready");
+        setRestoreStatus('ready');
       })
       .catch((error) => {
         if (!active || generation !== restoreGeneration.current) return;
         if (error.status === 401 || error.status === 403) {
           removeStoredToken();
           setStoredToken(null);
-          setRestoreStatus("ready");
+          setRestoreStatus('ready');
         } else {
-          setRestoreStatus("error");
+          setRestoreStatus('error');
         }
       });
 
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [storedToken, restoreAttempt]);
 
   async function signIn(email, password) {
@@ -101,118 +96,120 @@ export function AuthProvider({ children }) {
     const { access_token: token } = await login(email, password);
     const user = await getCurrentUser(token);
     if (generation !== restoreGeneration.current) {
-      throw new Error("A sessão mudou em outra aba. Tente novamente.");
+      throw new Error('A sessão mudou em outra aba. Tente novamente.');
     }
     storeToken(token);
     setSession({ token, user });
+    setSessionNotice('');
   }
 
-  function logout() {
+  const logout = useCallback(() => {
     restoreGeneration.current += 1;
     removeStoredToken();
     setStoredToken(null);
     setSession(null);
-    setRestoreStatus("ready");
-  }
+    setRestoreStatus('ready');
+    setSessionNotice('');
+  }, []);
+
+  const token = session?.token;
+  const api = useMemo(() => {
+    if (!token) return null;
+    // The token expired or was revoked: end this session, unless a newer one already replaced it.
+    return createClinicApi(token, () => {
+      if (getStoredToken() === token) {
+        removeStoredToken();
+        setStoredToken(null);
+      }
+      setSession((current) => (current?.token === token ? null : current));
+      setSessionNotice('Sua sessão expirou. Entre novamente para continuar.');
+    });
+  }, [token]);
+
+  useEffect(() => {
+    const expiresAt = token && tokenExpiresAt(token);
+    if (!expiresAt) return undefined;
+
+    let active = false;
+    let due = false;
+    let renewing = false;
+
+    async function renew() {
+      if (renewing) return;
+      renewing = true;
+      try {
+        const { access_token: nextToken } = await refreshToken(token);
+        if (getStoredToken() === token) storeToken(nextToken);
+        setSession((current) => (current?.token === token ? { ...current, token: nextToken } : current));
+      } catch {
+        // An expired or revoked session is ended by the next API call that gets a 401.
+      }
+    }
+
+    function markActive() {
+      active = true;
+      if (due) renew();
+    }
+
+    const timer = setTimeout(() => {
+      due = true;
+      if (active) renew();
+    }, Math.max(expiresAt - Date.now() - REFRESH_BEFORE_EXPIRY_MS, 0));
+
+    ACTIVITY_EVENTS.forEach((name) => window.addEventListener(name, markActive, { passive: true }));
+    return () => {
+      clearTimeout(timer);
+      ACTIVITY_EVENTS.forEach((name) => window.removeEventListener(name, markActive));
+    };
+  }, [token]);
+
+  // Reloads the signed-in user (e.g. after an admin changed their role).
+  const refreshUser = useCallback(async () => {
+    if (!token) return;
+    const user = await getCurrentUser(token);
+    setSession((current) => (current?.token === token ? { ...current, user } : current));
+  }, [token]);
 
   function retryRestore() {
-    setRestoreStatus("restoring");
+    setRestoreStatus('restoring');
     setRestoreAttempt((attempt) => attempt + 1);
   }
 
+  // Saves CPF/RG documents for the signed-in user, resolving type names (e.g. "CPF") to their ids.
   async function registerDocument(documents) {
-    if (!session) throw documentRequestError(401);
+    if (!api) throw new Error('Sua sessão expirou. Entre novamente.');
     const requested = Array.isArray(documents) ? documents : [documents];
-    if (!requested.length) throw documentRequestError(422);
-
-    let typesResponse;
-    try {
-      typesResponse = await fetch(`${apiBase()}/document-types`);
-    } catch {
-      throw new Error("Não foi possível carregar os tipos de documento.");
+    const normalize = (type) => String(type || '').trim().toLocaleUpperCase('pt-BR');
+    if (!requested.length || new Set(requested.map(({ type }) => normalize(type))).size !== requested.length
+      || requested.some(({ type, value }) => !normalize(type) || !String(value || '').trim())) {
+      throw new Error('Confira os documentos informados e tente novamente.');
     }
-    if (!typesResponse.ok) throw documentRequestError(typesResponse.status);
-    const availableTypes = await typesResponse.json();
-    if (!Array.isArray(availableTypes)) throw documentRequestError(422);
 
-    const seenTypes = new Set();
+    const availableTypes = await api.listDocumentTypes();
     const payload = requested.map(({ type, value }) => {
-      const normalizedType = String(type || "")
-        .trim()
-        .toLocaleUpperCase("pt-BR");
-      if (
-        !normalizedType ||
-        seenTypes.has(normalizedType) ||
-        !String(value || "").trim()
-      ) {
-        throw documentRequestError(422);
-      }
-      seenTypes.add(normalizedType);
-      const documentType = availableTypes.find(
-        (entry) =>
-          String(entry.type || "")
-            .trim()
-            .toLocaleUpperCase("pt-BR") === normalizedType,
-      );
-      if (!documentType) throw documentRequestError(404);
+      const documentType = availableTypes.find((entry) => normalize(entry.type) === normalize(type));
+      if (!documentType) throw new Error('O tipo de documento selecionado não está cadastrado na clínica.');
       return { type_id: documentType.id, value: String(value).trim() };
     });
 
-    let response;
-    try {
-      response = await fetch(`${apiBase()}/users/me/documents`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      throw new Error("Não foi possível conectar à clínica. Tente novamente.");
-    }
-    if (!response.ok) throw documentRequestError(response.status);
-    const createdDocuments = await response.json();
-    if (!Array.isArray(createdDocuments)) throw documentRequestError(422);
-
+    const createdDocuments = await api.registerDocuments(payload);
     setSession((current) => {
-      if (!current || current.token !== session.token) return current;
-      const existingIds = new Set(
-        (current.user.documents || []).map((doc) => doc.id),
-      );
+      if (current?.token !== token) return current;
+      const existingIds = new Set((current.user.documents || []).map((document) => document.id));
       return {
         ...current,
         user: {
           ...current.user,
-          documents: [
-            ...(current.user.documents || []),
-            ...createdDocuments.filter((doc) => !existingIds.has(doc.id)),
-          ],
+          documents: [...(current.user.documents || []), ...createdDocuments.filter((document) => !existingIds.has(document.id))],
         },
       };
     });
     return createdDocuments;
   }
+
   return (
-    <AuthContext.Provider
-      value={{
-        user: session?.user ?? null,
-        signIn,
-        logout,
-        restoreStatus,
-        retryRestore,
-        registerDocument,
-      }}
-    >
+    <AuthContext.Provider value={{ user: session?.user ?? null, api, signIn, logout, restoreStatus, retryRestore, registerDocument, refreshUser, sessionNotice, clearSessionNotice: () => setSessionNotice('') }}>
       {children}
     </AuthContext.Provider>
   );
-}
-
-// The context provider and its consumer hook intentionally share this module.
-// eslint-disable-next-line react-refresh/only-export-components
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used inside AuthProvider");
-  return context;
 }

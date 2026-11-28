@@ -12,6 +12,8 @@ RUN npm run build
 FROM nginx:stable-alpine AS runtime
 
 ENV PORT=8080
+# Backend reached through the shared Docker network (see the backend docker-compose.yml).
+ENV API_UPSTREAM=http://clinic_api:8000
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html
 

@@ -1,9 +1,13 @@
+import { HeartPulse } from 'lucide-react';
+
 function Footer() {
   return (
     <footer className="footer">
       <div>
         <a href="#" className="logo">
-          <span className="logo-icon">+</span>
+          <span className="logo-icon">
+            <HeartPulse size={20} aria-hidden="true" />
+          </span>
           Clínica Saúde
         </a>
 

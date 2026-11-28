@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { ArrowRight, Eye, EyeOff, HeartPulse, LoaderCircle } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext.jsx';
+import { useAuth } from '../../contexts/auth.js';
 
-export default function Login({ onCancel, onSuccess }) {
+export default function Login({ onCancel, onSuccess, onRegister, notice }) {
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,6 +36,7 @@ export default function Login({ onCancel, onSuccess }) {
         <div className="login-form-container">
           <h1>Boas-vindas de volta</h1>
           <p className="login-subtitle">Entre na sua conta da clínica.</p>
+          {notice && <p className="login-notice" role="status">{notice}</p>}
           <form onSubmit={handleSubmit} aria-busy={pending}>
             <div className="field">
               <label htmlFor="email">E-mail</label>
@@ -64,6 +65,12 @@ export default function Login({ onCancel, onSuccess }) {
                 : <>Entrar <ArrowRight size={18} aria-hidden="true" /></>}
             </button>
           </form>
+          {onRegister && (
+            <div className="auth-switch">
+              <span>Ainda não tem conta?</span>
+              <button type="button" className="auth-switch-link" onClick={onRegister} disabled={pending}>Criar conta de paciente</button>
+            </div>
+          )}
         </div>
       </main>
       <footer className="login-footer">Portal da Clínica Saúde</footer>
